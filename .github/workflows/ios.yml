@@ -1,0 +1,45 @@
+name: Собрать приложение iPhone
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Подготовить интерфейс и расписание
+        run: node ios/scripts/prepare.mjs
+      - name: Подготовить иконку
+        run: |
+          mkdir -p ios/Sources/Assets.xcassets/AppIcon.appiconset
+          sips -z 1024 1024 icon-512.png --out ios/Sources/Assets.xcassets/AppIcon.appiconset/icon.png
+          cat > ios/Sources/Assets.xcassets/AppIcon.appiconset/Contents.json <<'JSON'
+          {"images":[{"filename":"icon.png","idiom":"universal","platform":"ios","size":"1024x1024"}],"info":{"author":"xcode","version":1}}
+          JSON
+      - name: Создать проект Xcode
+        run: |
+          brew install xcodegen
+          cd ios
+          xcodegen generate
+      - name: Собрать приложение без подписи
+        run: >-
+          xcodebuild -project ios/Raspisanie.xcodeproj
+          -scheme Raspisanie -configuration Release -sdk iphoneos
+          -destination 'generic/platform=iOS' -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO build
+      - name: Упаковать IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Raspisanie.app Payload/
+          zip -qr Raspisanie-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Raspisanie-iPhone
+          path: Raspisanie-unsigned.ipa
+          retention-days: 30
+          if-no-files-found: error
