@@ -28,6 +28,8 @@ jobs:
 
       - name: Создать проект Xcode
         run: |
+          mv ios/Resources ios/WebAssets
+          sed -i '' 's/Resources/WebAssets/g' ios/project.yml ios/Sources/App.swift
           brew install xcodegen
           cd ios
           xcodegen generate
