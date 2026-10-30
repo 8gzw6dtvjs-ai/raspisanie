@@ -1,0 +1,15 @@
+{
+  "name": "Расписание ОИБ11-24П",
+  "short_name": "Пары ОИБ",
+  "description": "Расписание пар группы ОИБ11-24П, КТ МТУСИ",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e9edf0",
+  "theme_color": "#15202a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
