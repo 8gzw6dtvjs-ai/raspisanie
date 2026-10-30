@@ -68,6 +68,7 @@
   $('practiceSource').href = source;
   function render() {
     $('practiceStatus').textContent = message;
+    $('practiceStatus').hidden = !message;
     if (!data) { $('practiceContent').innerHTML = '<div class="empty">Расписание практики пока не загружено. Проверь интернет или открой исходную таблицу ниже.</div>'; return; }
     const names = Object.keys(data.groups);
     if (!names.includes(group)) group = names[0];
@@ -103,15 +104,15 @@
         const times = row.time.match(/\d{1,2}[:.]\d{2}/g) || [];
         const time = times.length === 2 ? times.map(t => esc(t.replace('.', ':'))).join('<br>') : esc(row.time);
         return `<li class="pair practice-pair"><div class="pn"><span class="num">УП</span><span class="tm">${time}</span></div><div class="body"><div class="lesson">${row.module ? `<span class="code">${esc(row.module)}</span>` : ''}<div class="ttl">Учебная практика</div><div class="who">${esc(row.teacher || 'Преподаватель не указан')}</div>${row.time ? '' : '<div class="note">Время в таблице не указано</div>'}${row.room ? '' : '<div class="note">Лаборатория не указана</div>'}</div></div><span class="room">${esc(row.room)}</span></li>`;
-      }).join('')}</ol>` : '<div class="empty">На этот день практики в таблице нет.</div>';
+      }).join('')}</ol>` : `<div class="empty">В таблице практики для ${esc(group)} нет записи на ${ddmm(date)}.</div>`;
       return `<section class="day${date === now ? ' is-today' : ''}"><h2><span>${WD[day]}</span><span class="d">${ddmm(date)}${date === now ? ' · сегодня' : ''}</span></h2>${content}</section>`;
     }
     $('practiceContent').innerHTML = (selected.day === 'all' ? dates : [dates[selected.day]]).map(dayHTML).join('');
   }
   async function refresh() {
     if (busy) return;
-    busy = true; lastAttempt = Date.now(); $('practiceRefresh').disabled = true;
-    message = 'Проверяю обновления…'; render();
+    busy = true; lastAttempt = Date.now();
+    message = ''; render();
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 18000);
     try {
       const response = await fetch(sheet + 'export?format=csv&gid=692423880&t=' + Date.now(), {cache:'no-store', credentials:'omit', signal:controller.signal});
@@ -119,12 +120,12 @@
       const groups = parse(await response.text());
       data = {groups, updated: new Date().toISOString()};
       put('practice-cache-v1', JSON.stringify(data));
-      message = 'Проверено ' + new Intl.DateTimeFormat('ru-RU', {timeZone:'Europe/Moscow', day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(data.updated)) + ' (МСК).';
+      message = '';
     } catch {
-      message = data ? 'Нет связи с таблицей. Показана сохранённая копия от ' + new Date(data.updated).toLocaleString('ru-RU', {timeZone:'Europe/Moscow'}) + ' (МСК). Сверься с источником.' : 'Не удалось прочитать таблицу. Проверь интернет и доступ по ссылке, затем нажми «Обновить».';
-    } finally { clearTimeout(timer); busy = false; $('practiceRefresh').disabled = false; render(); }
+      message = data ? 'Нет связи с таблицей. Показана сохранённая копия. Сверься с источником.' : 'Не удалось прочитать таблицу. Проверь интернет и доступ по ссылке.';
+    } finally { clearTimeout(timer); busy = false; render(); }
   }
-  try { const cached = JSON.parse(get('practice-cache-v1')); if (cached?.groups && cached?.updated && Object.values(cached.groups).every(Array.isArray)) { data = cached; message = 'Сохранённая копия от ' + new Date(cached.updated).toLocaleString('ru-RU', {timeZone:'Europe/Moscow'}) + ' (МСК).'; } } catch {}
+  try { const cached = JSON.parse(get('practice-cache-v1')); if (cached?.groups && cached?.updated && Object.values(cached.groups).every(Array.isArray)) { data = cached; } } catch {}
   function selectTab(practice) {
     active = practice;
     ['scheduleHeader','main','scheduleFooter'].forEach(id => $(id).hidden = practice);
@@ -144,7 +145,6 @@
     const button = event.target.closest('[data-pd]'); if (!button) return;
     selected.day = button.dataset.pd === 'all' ? 'all' : +button.dataset.pd; render();
   });
-  $('practiceRefresh').onclick = refresh;
   document.addEventListener('visibilitychange', () => { if (!document.hidden && active && Date.now() - lastAttempt > 60000) refresh(); });
   window.addEventListener('online', () => { if (active) refresh(); });
   setInterval(() => { if (active && !document.hidden) refresh(); }, 5 * 60000);

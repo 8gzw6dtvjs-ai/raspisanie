@@ -180,7 +180,7 @@ footer a { color: var(--accent); }
     <button class="chip" id="practiceTab" role="tab" aria-selected="false" aria-controls="practicePanel">Учебная практика</button>
   </nav>
   <header class="top" id="scheduleHeader">
-    <div class="kicker"><span>Колледж телекоммуникаций МТУСИ</span><span id="upd"></span></div>
+    <div class="kicker"><span>Колледж телекоммуникаций МТУСИ</span></div>
     <div class="grp">
       <h1 id="grpName">ОИБ11-24П</h1>
     </div>
@@ -195,15 +195,15 @@ footer a { color: var(--accent); }
   </main>
   <section id="practicePanel" role="tabpanel" aria-labelledby="practiceTab" hidden>
     <header class="top" id="practiceHeader">
-      <div class="kicker"><span>Колледж телекоммуникаций МТУСИ · Учебная практика</span><span id="practiceStatus" role="status"></span></div>
+      <div class="kicker"><span>Колледж телекоммуникаций МТУСИ · Учебная практика</span></div>
       <div class="grp"><h1 id="practiceGroupName">Учебная практика</h1></div>
       <label class="schedule-group">Группа<select id="practiceGroup" disabled aria-label="Группа учебной практики"><option>Загрузка…</option></select></label>
       <div class="row" id="practiceWeeks" role="group" aria-label="Неделя практики"></div>
       <div class="row" id="practiceDays" role="group" aria-label="День практики"></div>
     </header>
+    <div id="practiceStatus" class="notice" role="status" hidden></div>
     <div id="practiceContent" class="wrap" aria-live="polite"></div>
-    <div class="row"><button class="chip" id="practiceRefresh" type="button">Обновить практику</button></div>
-    <p class="note">Изменения проверяются при открытии вкладки и каждые 5 минут, пока она открыта. <a id="practiceSource" target="_blank" rel="noopener">Открыть таблицу практики</a>.</p>
+    <p class="note"><a id="practiceSource" target="_blank" rel="noopener">Открыть таблицу практики</a>.</p>
   </section>
   <footer id="scheduleFooter">
     <div class="legend">
@@ -410,8 +410,6 @@ footer a { color: var(--accent); }
     dchips.push(`<button class="chip day" aria-pressed="${st.day === 'all'}" data-d="all"><b>Вся</b><span>неделя</span></button>`);
     $('days').innerHTML = dchips.join('');
     let html = '';
-    const age = (Date.now() - new Date(D.updated).getTime()) / 36e5;
-    if (age > 6) html += `<div class="notice">Данные не обновлялись ${Math.round(age)} ч. Может не хватать свежих замен — сверься с <a href="${SRC}" target="_blank" rel="noopener">таблицей</a>.</div>`;
     if (!week.ready) html += '<div class="notice">Эта неделя в таблице помечена «НЕ готово»: учебная часть ещё может её поменять.</div>';
     if (st.day === 'all') html += week.dates.map((_, i) => dayHTML(week, i)).join('');
     else html += dayHTML(week, st.day);
@@ -426,8 +424,6 @@ footer a { color: var(--accent); }
   }
 
   function fill() {
-    const u = new Date(D.updated);
-    $('upd').textContent = 'обновлено ' + new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(u).replace(',', ' в');
     $('src').innerHTML = `Данные из <a href="${SRC}" target="_blank" rel="noopener">таблицы расписания колледжа</a>. Если что-то не сходится, верь таблице.`;
   }
 
