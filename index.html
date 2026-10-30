@@ -3,207 +3,67 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#e9edf0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0e1419" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101722" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Расписание групп КТ МТУСИ: пары, замены, отмены, зачёты и учебная практика.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Пары ОИБ">
+<meta name="apple-mobile-web-app-title" content="КТ · Расписание">
 <title>Расписание КТ МТУСИ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
-<style>
-/* Layout: одна узкая колонка как распечатка у учебной части; липкая шапка с группой,
-   неделей и днями; день — один лист с парами, разделёнными тонкими линиями. */
-:root {
-  --bg: #e9edf0;
-  --paper: #ffffff;
-  --ink: #15202a;
-  --muted: #5d6874;
-  --line: #d3dae0;
-  --head: #d9d9d9;          /* серый, как шапка в таблице колледжа */
-  --accent: #1d4fa3;
-  --accent-soft: #e2eaf8;
-  --chg: #b3264f;  --chg-soft: #f8e4ea;
-  --zach: #22609f; --zach-soft: #e0ecf8;
-  --kons: #a35a00; --kons-soft: #fdeed6;
-  --dist: #36773a; --dist-soft: #e3f1e1;
-  --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
-  --f-body: "Golos Text", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e1419; --paper: #172029; --ink: #e5ebf0; --muted: #94a1ad; --line: #2a3641;
-    --head: #2b343d; --accent: #8db1f2; --accent-soft: #1d2b44;
-    --chg: #ff8aa5; --chg-soft: #3a1d27;
-    --zach: #8cbcf0; --zach-soft: #18304a;
-    --kons: #f2b25e; --kons-soft: #3a2a14;
-    --dist: #8fcf8c; --dist-soft: #1c3320;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0e1419; --paper: #172029; --ink: #e5ebf0; --muted: #94a1ad; --line: #2a3641;
-  --head: #2b343d; --accent: #8db1f2; --accent-soft: #1d2b44;
-  --chg: #ff8aa5; --chg-soft: #3a1d27;
-  --zach: #8cbcf0; --zach-soft: #18304a;
-  --kons: #f2b25e; --kons-soft: #3a2a14;
-  --dist: #8fcf8c; --dist-soft: #1c3320;
-  color-scheme: dark;
-}
 
-* { box-sizing: border-box; }
-body {
-  background: var(--bg); color: var(--ink);
-  font: 15px/1.45 var(--f-body);
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 0 32px;
-}
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
-.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 14px; }
 
-header.top {
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
-  background: var(--bg);
-  display: grid; gap: 10px; padding-block: 14px 10px;
-  border-bottom: 1px solid var(--line);
-}
-.kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.grp { position: relative; display: inline-flex; align-items: baseline; gap: 10px; width: fit-content; max-width: 100%; }
-.grp h1 { margin: 0; font: 700 clamp(26px, 7vw, 36px)/1.05 var(--f-display); letter-spacing: -.01em; }
-.grp { flex-wrap: wrap; }
-.grp .chev { font: 500 13px var(--f-body); color: var(--muted); white-space: nowrap; }
-
-.row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.row::-webkit-scrollbar { display: none; }
-.chip {
-  flex: 0 0 auto; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
-  border-radius: 8px; padding: 6px 10px; font: 500 13px/1.2 var(--f-body); cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.chip:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.chip .sub { color: var(--muted); font-weight: 400; }
-.chip[aria-pressed="true"] .sub { color: inherit; opacity: .75; }
-.chip.day { flex-direction: column; gap: 0; min-width: 48px; padding: 5px 8px; }
-.chip.day b { font: 600 13px var(--f-body); }
-.chip.day span { font: 400 12px var(--f-mono); color: var(--muted); }
-.chip.day[aria-pressed="true"] span { color: inherit; opacity: .8; }
-.chip.day.today { border-color: var(--accent); }
-.chip.day.today b::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 4px; vertical-align: middle; }
-.chip .draft { font-size: 11px; color: var(--kons); }
-.chip[aria-pressed="true"] .draft { color: inherit; }
-
-.notice { font-size: 13px; color: var(--kons); background: var(--kons-soft); border-radius: 8px; padding: 8px 12px; }
-
-.day { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.day > h2 {
-  margin: 0; padding: 8px 14px; background: var(--head);
-  font: 600 13px var(--f-body); letter-spacing: .06em; text-transform: uppercase;
-  display: flex; justify-content: space-between; gap: 8px;
-}
-.day > h2 .d { font-family: var(--f-mono); font-weight: 500; letter-spacing: 0; }
-.day.is-today > h2 { background: var(--accent-soft); color: var(--accent); }
-.empty { padding: 18px 14px; color: var(--muted); }
-.daynote { padding: 22px 14px; font: 500 16px var(--f-body); text-align: center; }
-
-ol.pairs { list-style: none; margin: 0; padding: 0; }
-.pair { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); align-items: start; }
-.pair:first-child { border-top: 0; }
-.pn { display: grid; gap: 2px; }
-.pn .num { font: 700 22px/1 var(--f-display); }
-.pn .tm { font: 400 11.5px/1.35 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.body { min-width: 0; display: grid; gap: 6px; }
-.lesson { display: grid; gap: 1px; }
-.code { font: 500 11.5px var(--f-mono); color: var(--muted); }
-.ttl { font-weight: 500; overflow-wrap: anywhere; }
-.who { font-size: 13.5px; color: var(--muted); }
-.note { font-size: 13px; color: var(--muted); }
-.room { font: 500 13px var(--f-mono); padding: 3px 7px; border: 1px solid var(--line); border-radius: 6px; white-space: nowrap; align-self: start; }
-.room:empty { display: none; }
-
-.pair.window { padding-block: 6px; color: var(--muted); font-size: 13px; }
-.pair.window .num { font-size: 15px; color: var(--muted); }
-
-.badges { display: flex; flex-wrap: wrap; gap: 5px; }
-.b { font: 600 11px/1 var(--f-body); letter-spacing: .04em; text-transform: uppercase; padding: 4px 6px; border-radius: 5px; }
-.b.chg { background: var(--chg-soft); color: var(--chg); }
-.b.chg.old { background: transparent; border: 1px dashed var(--chg); }
-.b.zach, .b.exam { background: var(--zach-soft); color: var(--zach); }
-.b.kons { background: var(--kons-soft); color: var(--kons); }
-.b.dist { background: var(--dist-soft); color: var(--dist); }
-.b.now { background: var(--accent); color: var(--paper); }
-.b.next { background: var(--accent-soft); color: var(--accent); }
-
-.pair.chg { background: linear-gradient(90deg, var(--chg-soft), transparent 70%); }
-.pair.now { box-shadow: inset 0 0 0 2px var(--accent); }
-.cancelled { font-size: 13.5px; color: var(--muted); }
-.cancelled s { text-decoration-color: var(--chg); text-decoration-thickness: 2px; }
-.cancelled .lbl, .instead { font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--chg); margin-right: 4px; }
-.struck .ttl { text-decoration: line-through; }
-
-/* Числитель / знаменатель: дробь, как «над чертой / под чертой» в таблице */
-.frac { display: grid; }
-.frac .half { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding-block: 4px; }
-.frac .half + .half { border-top: 2px solid var(--ink); }
-.frac .half.off { opacity: .45; }
-.frac .hl { grid-column: 1 / -1; font: 600 10.5px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.frac .half.on .hl { color: var(--accent); }
-.frac .none { color: var(--muted); font-style: italic; }
-
-footer { color: var(--muted); font-size: 12.5px; display: grid; gap: 8px; padding-top: 4px; }
-footer a { color: var(--accent); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px; }
-.err { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
-@media (max-width: 380px) {
-  .pair { grid-template-columns: 44px minmax(0, 1fr); }
-  .pair > .room { grid-column: 2; justify-self: start; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .day { animation: in .18s ease-out both; }
-  @keyframes in { from { transform: translateY(4px); } to { transform: none; } }
-}
-</style>
-<style>:root{color-scheme:light}html,body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
-<link rel="stylesheet" href="practice.css">
+<script>/* Theme initialization */
+try { const theme = localStorage.getItem('schedule-theme'); if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme; } catch {}
+</script>
+<style>[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="practice.css?v=9">
 </head>
 <body>
 
-<div class="wrap">
+<div class="wrap shell">
+  <div class="brandbar">
+    <a class="brand" href="https://ct.mtuci.ru/" target="_blank" rel="noopener" aria-label="КТ МТУСИ — сайт колледжа">
+      <span class="brand-mark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" fill="none" aria-hidden="true"><path d="M43 12 67 24 75 49 59 72 29 72 12 51 19 27Z" stroke="#453386" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
+      <span class="brand-copy"><strong>МТУСИ</strong><span>Колледж телекоммуникаций</span></span>
+    </a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Тема: как на устройстве. Нажмите, чтобы сменить">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.5 13.2A8.7 8.7 0 0 1 10.8 3.5 8.7 8.7 0 1 0 20.5 13.2Z"/></svg>
+      <span id="themeLabel">Авто</span>
+    </button>
+  </div>
   <nav class="schedule-tabs" role="tablist" aria-label="Раздел расписания">
     <button class="chip" id="scheduleTab" role="tab" aria-selected="true" aria-controls="main">Расписание</button>
     <button class="chip" id="practiceTab" role="tab" aria-selected="false" aria-controls="practicePanel">Учебная практика</button>
   </nav>
   <header class="top" id="scheduleHeader">
-    <div class="kicker"><span>Колледж телекоммуникаций МТУСИ</span></div>
+    <div class="kicker"><span>Расписание занятий</span></div>
     <div class="grp">
       <h1 id="grpName">ОИБ11-24П</h1>
     </div>
     <label class="schedule-group">Группа
       <select id="scheduleGroup" disabled aria-label="Группа основного расписания"><option>Загрузка…</option></select>
     </label>
-    <div class="row" id="weeks" role="group" aria-label="Неделя"></div>
-    <div class="row" id="days" role="group" aria-label="День"></div>
+    <div class="nav-block"><div class="control-label">Неделя</div><div class="row" id="weeks" role="group" aria-label="Неделя"></div></div>
+    <div class="nav-block"><div class="control-label">День</div><div class="row" id="days" role="group" aria-label="День"></div></div>
   </header>
   <main id="main" class="wrap" aria-live="polite">
     <div class="day"><div class="empty">Загружаю расписание…</div></div>
   </main>
   <section id="practicePanel" role="tabpanel" aria-labelledby="practiceTab" hidden>
     <header class="top" id="practiceHeader">
-      <div class="kicker"><span>Колледж телекоммуникаций МТУСИ · Учебная практика</span></div>
+      <div class="kicker"><span>Учебная практика</span></div>
       <div class="grp"><h1 id="practiceGroupName">Учебная практика</h1></div>
       <label class="schedule-group">Группа<select id="practiceGroup" disabled aria-label="Группа учебной практики"><option>Загрузка…</option></select></label>
-      <div class="row" id="practiceWeeks" role="group" aria-label="Неделя практики"></div>
-      <div class="row" id="practiceDays" role="group" aria-label="День практики"></div>
+      <div class="nav-block"><div class="control-label">Неделя</div><div class="row" id="practiceWeeks" role="group" aria-label="Неделя практики"></div></div>
+      <div class="nav-block"><div class="control-label">День</div><div class="row" id="practiceDays" role="group" aria-label="День практики"></div></div>
     </header>
+    <div class="practice-feed">
     <div id="practiceStatus" class="notice" role="status" hidden></div>
     <div id="practiceContent" class="wrap" aria-live="polite"></div>
-    <p class="note"><a id="practiceSource" target="_blank" rel="noopener">Открыть таблицу практики</a>.</p>
+    <p class="source-line"><a id="practiceSource" target="_blank" rel="noopener">Открыть таблицу практики ↗</a></p>
+    </div>
   </section>
   <footer id="scheduleFooter">
     <div class="legend">
@@ -214,6 +74,72 @@ footer a { color: var(--accent); }
   </footer>
 </div>
 
+<script>
+/* Snapshots use decoded content, so rebuilding the string dictionary cannot create changes. */
+globalThis.ScheduleChanges = class ScheduleChanges {
+  constructor(storage, scope = 'main') {
+    this.storage = storage;
+    this.scope = scope;
+    this.sessions = new Map();
+  }
+  history(group) {
+    if (!this.sessions.has(group)) {
+      let days = {};
+      try {
+        const saved = JSON.parse(this.storage.get(this.key(group)));
+        if (saved?.v === 1 && saved.days && typeof saved.days === 'object') days = saved.days;
+      } catch {}
+      this.sessions.set(group, {baseline: {...days}, saved: {...days}});
+    }
+    return this.sessions.get(group);
+  }
+  key(group) { return 'schedule-seen-v1:' + this.scope + ':' + group; }
+  prime(group, days) {
+    const history = this.history(group);
+    let changed = false;
+    for (const [date, snapshot] of Object.entries(days)) {
+      if (!history.baseline[date]) {
+        history.baseline[date] = snapshot;
+        history.saved[date] = snapshot;
+        changed = true;
+      }
+    }
+    if (changed) this.persist(group, history);
+  }
+  persist(group, history) {
+    const dates = Object.keys(history.saved).sort().slice(-240);
+    history.saved = Object.fromEntries(dates.map(key => [key, history.saved[key]]));
+    this.storage.set(this.key(group), JSON.stringify({v:1, days:history.saved}));
+  }
+  compare(previous, current) {
+    const result = {changed:false, added:[], updated:[], removed:[]};
+    if (!previous || !Array.isArray(previous.pairs) || !previous.pairs.every(pair => pair && Number.isFinite(pair.n))) return result;
+    const old = new Map(previous.pairs.map(pair => [pair.n, pair]));
+    const next = new Map(current.pairs.map(pair => [pair.n, pair]));
+    for (const pair of current.pairs) {
+      if (!old.has(pair.n)) result.added.push(pair.n);
+      else if (JSON.stringify(old.get(pair.n)) !== JSON.stringify(pair) ||
+        (previous.parity !== current.parity && pair.cell && !Array.isArray(pair.cell))) result.updated.push(pair.n);
+    }
+    for (const pair of previous.pairs) if (!next.has(pair.n)) result.removed.push(pair.n);
+    result.changed = !!(result.added.length || result.updated.length || result.removed.length);
+    return result;
+  }
+  inspect(group, date, current) {
+    return this.compare(this.history(group).baseline[date], current);
+  }
+  visit(group, date, current) {
+    const history = this.history(group);
+    const changes = this.compare(history.baseline[date], current);
+    if (!history.baseline[date]) history.baseline[date] = current;
+    history.saved[date] = current;
+    // Keep about one academic year's viewed dates for each group.
+    this.persist(group, history);
+    return changes;
+  }
+};
+
+</script>
 <script>
 (() => {
   const SRC = 'https://docs.google.com/spreadsheets/d/1RRrdDgLjqfFRYhjbxTdcJY_iNvP3ZEuu/htmlview';
@@ -229,6 +155,7 @@ footer a { color: var(--accent); }
 
   let D = null, S = [];
   const st = { group: store.get('schedule-group') || GROUP, week: 0, day: 0 };
+  const viewed = new ScheduleChanges(store);
 
   function fillGroups() {
     const groups = [...new Set(D.weeks.flatMap(w => Object.keys(w.groups)))].sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
@@ -251,6 +178,21 @@ footer a { color: var(--accent); }
   const acadStart = NOW.m >= 8 ? NOW.y : NOW.y - 1;
   const dateOf = (ddmm) => { if (!ddmm) return null; const [d, m] = ddmm.split('.').map(Number); return Date.UTC(m >= 8 ? acadStart : acadStart + 1, m - 1, d); };
   const todayTs = Date.UTC(NOW.y, NOW.m - 1, NOW.d);
+
+  function snapshot(week, day) {
+    const clean = value => String(value || '').replace(/\s+/g, ' ').trim();
+    const decodeHalf = h => h ? [clean(S[h[0]]), clean(S[h[1]]), [...(h[2] || '')].sort().join('')] : null;
+    const decode = cell => Array.isArray(cell) ? decodeHalf(cell) : {a:decodeHalf(cell.a), b:decodeHalf(cell.b)};
+    const pairs = (week.groups[st.group]?.find(d => d[0] === day)?.[1] || []).map(p => ({n:p[0], time:clean(S[p[1]]), cell:decode(p[2])}));
+    return {parity:week.parity, pairs};
+  }
+  function dayChanges(week, day, visit = false) {
+    const date = week.dates[day];
+    if (!date || !week.groups[st.group]) return {changed:false, added:[], updated:[], removed:[]};
+    const key = new Date(dateOf(date)).toISOString().slice(0,10);
+    return viewed[visit && !$('main').hidden ? 'visit' : 'inspect'](st.group, key, snapshot(week, day));
+  }
+  const freshBadge = '<span class="b fresh">Изменилось с прошлого просмотра</span>';
 
   // ---- разбор текста ячейки ----
   const CODE = /(?:ОУП|ДУП|СГЦ|ОП|МДК|ОГСЭ|ЕН|ПМ|УП|ПП|ОДБ|ОДП|ОУД|ЭК|ОПД|ДУД|УД|БД)\.\s?\d{1,2}(?:\.\d{1,2})?\.?/;
@@ -349,6 +291,9 @@ footer a { color: var(--accent); }
     const tsp = timeSpan(S[ti]);
     const tm = tsp ? `${tsp.s}<br>${tsp.e}` : '';
     let cls = 'pair', extra = [], body = '', room = '';
+    if (ctx.changes.added.includes(n) || ctx.changes.updated.includes(n)) {
+      cls += ' fresh'; extra.push(freshBadge);
+    }
     if (ctx.isToday && tsp) {
       if (NOW.min >= tsp.sm && NOW.min < tsp.em) { cls += ' now'; extra.push(`<span class="b now">Идёт · до ${tsp.e}</span>`); }
       else if (ctx.nextN === n) { const d = tsp.sm - NOW.min; extra.push(`<span class="b next">Следующая · через ${d >= 60 ? Math.floor(d / 60) + ' ч ' : ''}${d % 60} мин</span>`); }
@@ -384,29 +329,38 @@ footer a { color: var(--accent); }
     const isToday = date === NOW.ddmm;
     const head = `<h2><span>${WD[wi]}</span><span class="d">${esc(date)}${isToday ? ' · сегодня' : ''}</span></h2>`;
     if (!g) return `<section class="day">${head}<div class="empty">На эту неделю пар для ${esc(st.group)} в таблице пока нет.</div></section>`;
+    const changes = dayChanges(week, wi, true);
+    const removed = changes.removed.length ? `<div class="fresh-note">${freshBadge}<div>Из расписания ${changes.removed.length === 1 ? 'убрана пара' : 'убраны пары'} № ${changes.removed.map(esc).join(', ')}.</div></div>` : '';
     const d = g.find((x) => x[0] === wi);
     const pairs = d ? d[1] : [];
-    if (!pairs.length) return `<section class="day${isToday ? ' is-today' : ''}">${head}<div class="empty">Пар нет.</div></section>`;
+    if (!pairs.length) return `<section class="day${isToday ? ' is-today' : ''}">${head}${removed}<div class="empty">Пар нет.</div></section>`;
     const texts = pairs.map((p) => (Array.isArray(p[2]) ? S[p[2][0]] + '|' + S[p[2][1]] : '#'));
     if (pairs.length >= 4 && texts.every((x) => x === texts[0]) && texts[0] !== '#' && !S[pairs[0][2][1]]) {
-      return `<section class="day${isToday ? ' is-today' : ''}">${head}<div class="daynote">${esc(norm(S[pairs[0][2][0]]))}</div></section>`;
+      return `<section class="day${isToday ? ' is-today' : ''}">${head}${removed}${changes.changed && !removed ? `<div class="fresh-note">${freshBadge}</div>` : ''}<div class="daynote">${esc(norm(S[pairs[0][2][0]]))}</div></section>`;
     }
     let nextN = null;
     if (isToday) { for (const p of pairs) { const t = timeSpan(S[p[1]]); if (t && t.sm > NOW.min) { nextN = p[0]; break; } } }
-    const ctx = { date, parity: week.parity, isToday, nextN };
+    const ctx = { date, parity: week.parity, isToday, nextN, changes };
     const items = [];
     pairs.forEach((p, i) => {
       if (i > 0) for (let k = pairs[i - 1][0] + 1; k < p[0]; k++) items.push(`<li class="pair window"><div class="pn"><span class="num">${k}</span></div><div class="body">окно</div></li>`);
       items.push(pairHTML(p, ctx));
     });
-    return `<section class="day${isToday ? ' is-today' : ''}">${head}<ol class="pairs">${items.join('')}</ol></section>`;
+    return `<section class="day${isToday ? ' is-today' : ''}">${head}${removed}<ol class="pairs">${items.join('')}</ol></section>`;
   }
 
   function render() {
     const week = D.weeks[st.week];
+    if (!$('main').hidden) {
+      const initial = {};
+      for (const w of D.weeks) if (w.groups[st.group]) w.dates.forEach((date, day) => {
+        if (date) initial[new Date(dateOf(date)).toISOString().slice(0,10)] = snapshot(w, day);
+      });
+      viewed.prime(st.group, initial);
+    }
     $('grpName').textContent = st.group;
-    $('weeks').innerHTML = D.weeks.map((w, i) => `<button class="chip" aria-pressed="${i === st.week}" data-w="${i}">${esc(w.from)}–${esc(w.to)} <span class="sub">${w.parity === 'ч' ? 'числ.' : w.parity === 'з' ? 'знам.' : ''}</span>${w.ready ? '' : '<span class="draft">черновик</span>'}</button>`).join('');
-    const dchips = week.dates.map((d, i) => `<button class="chip day${d === NOW.ddmm ? ' today' : ''}" aria-pressed="${st.day === i}" data-d="${i}"><b>${WDS[i]}</b><span>${esc(d.split('.')[0] || '')}</span></button>`);
+    $('weeks').innerHTML = D.weeks.map((w, i) => `<button class="chip" aria-pressed="${i === st.week}" data-w="${i}">${esc(w.from)}–${esc(w.to)} <span class="sub">${w.parity === 'ч' ? 'числ.' : w.parity === 'з' ? 'знам.' : ''}</span>${w.ready ? '' : '<span class="draft">черновик</span>'}${w.dates.some((_, d) => dayChanges(w, d).changed) ? '<span class="fresh-dot" aria-label="Есть изменения с прошлого просмотра">●</span>' : ''}</button>`).join('');
+    const dchips = week.dates.map((d, i) => `<button class="chip day${d === NOW.ddmm ? ' today' : ''}" aria-pressed="${st.day === i}" data-d="${i}"${dayChanges(week, i).changed ? ' aria-label="' + WDS[i] + ' ' + esc(d) + ' — есть изменения с прошлого просмотра"' : ''}><b>${WDS[i]}${dayChanges(week, i).changed ? '<span class="fresh-dot" aria-hidden="true"> ●</span>' : ''}</b><span>${esc(d.split('.')[0] || '')}</span></button>`);
     dchips.push(`<button class="chip day" aria-pressed="${st.day === 'all'}" data-d="all"><b>Вся</b><span>неделя</span></button>`);
     $('days').innerHTML = dchips.join('');
     let html = '';
@@ -445,5 +399,27 @@ footer a { color: var(--accent); }
 </script>
 
 <script src="practice.js"></script>
+<script>/* Theme controls */
+(() => {
+  const root = document.documentElement;
+  const button = document.getElementById('themeToggle');
+  const label = document.getElementById('themeLabel');
+  const modes = ['auto', 'light', 'dark'];
+  const titles = {auto:'Как на устройстве', light:'Светлая', dark:'Тёмная'};
+  const system = window.matchMedia('(prefers-color-scheme: dark)');
+  let mode = 'auto';
+  try { const saved = localStorage.getItem('schedule-theme'); if (modes.includes(saved)) mode = saved; } catch {}
+  function apply() {
+    if (mode === 'auto') root.removeAttribute('data-theme'); else root.dataset.theme = mode;
+    label.textContent = mode === 'auto' ? 'Авто' : titles[mode];
+    button.setAttribute('aria-label', 'Тема: ' + titles[mode].toLowerCase() + '. Нажмите, чтобы сменить');
+    const dark = mode === 'dark' || (mode === 'auto' && system.matches);
+    document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.content = dark ? '#101722' : '#f5f7fb');
+  }
+  button.addEventListener('click', () => { mode = modes[(modes.indexOf(mode) + 1) % modes.length]; try { localStorage.setItem('schedule-theme', mode); } catch {} apply(); });
+  system.addEventListener('change', apply);
+  apply();
+})();
+</script>
 </body>
 </html>
