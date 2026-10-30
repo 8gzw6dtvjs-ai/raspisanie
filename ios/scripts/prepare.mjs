@@ -9,6 +9,6 @@ html = html.replace(needle, `Promise.resolve({ok: true, json: () => Promise.reso
 html = html.replace("  let shown = false;", "  let shown = false;\n  window.addEventListener('native-schedule', (event) => show(event.detail));");
 html = html.replace("if ('serviceWorker' in navigator)", "if (false && 'serviceWorker' in navigator)");
 await writeFile(new URL('index.html', dest), html);
-for (const name of ['data.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest']) {
+for (const name of ['practice.js', 'practice.css', 'data.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest']) {
   await copyFile(new URL(name, root), new URL(name, dest));
 }

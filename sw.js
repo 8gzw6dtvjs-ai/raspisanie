@@ -1,6 +1,6 @@
 // Офлайн-режим: страница и последнее скачанное расписание открываются без интернета.
-const CACHE = 'pary-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const CACHE = 'pary-v3-practice';
+const SHELL = ['./', 'index.html', 'practice.js', 'practice.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -27,3 +27,4 @@ self.addEventListener('fetch', (e) => {
   }
   e.respondWith(caches.match(e.request).then((m) => m || fetch(e.request)));
 });
+

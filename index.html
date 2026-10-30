@@ -170,11 +170,16 @@ footer a { color: var(--accent); }
 }
 </style>
 <style>:root{color-scheme:light}html,body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="practice.css">
 </head>
 <body>
 
 <div class="wrap">
-  <header class="top">
+  <nav class="schedule-tabs" role="tablist" aria-label="Раздел расписания">
+    <button class="chip" id="scheduleTab" role="tab" aria-selected="true" aria-controls="main">Расписание</button>
+    <button class="chip" id="practiceTab" role="tab" aria-selected="false" aria-controls="practicePanel">Учебная практика</button>
+  </nav>
+  <header class="top" id="scheduleHeader">
     <div class="kicker"><span>Колледж телекоммуникаций МТУСИ</span><span id="upd"></span></div>
     <div class="grp">
       <h1 id="grpName">ОИБ11-24П</h1><span class="chev">3 курс · инф. безопасность</span>
@@ -185,7 +190,19 @@ footer a { color: var(--accent); }
   <main id="main" class="wrap" aria-live="polite">
     <div class="day"><div class="empty">Загружаю расписание…</div></div>
   </main>
-  <footer>
+  <section id="practicePanel" role="tabpanel" aria-labelledby="practiceTab" hidden>
+    <h1>Учебная практика</h1>
+    <div class="practice-controls">
+      <label>Группа<select id="practiceGroup" disabled><option>Загрузка…</option></select></label>
+      <label>Дата<input type="date" id="practiceDate"></label>
+      <button class="chip" id="practiceAll" type="button">Все даты</button>
+      <button class="chip" id="practiceRefresh" type="button">Обновить</button>
+    </div>
+    <div id="practiceStatus" role="status"></div>
+    <div id="practiceContent" class="wrap" aria-live="polite"></div>
+    <p class="note">Изменения проверяются при открытии вкладки и каждые 5 минут, пока она открыта. <a id="practiceSource" target="_blank" rel="noopener">Открыть таблицу практики</a>.</p>
+  </section>
+  <footer id="scheduleFooter">
     <div class="legend">
       <span class="b chg">Замена / отмена</span><span class="b zach">Зачёт</span><span class="b kons">Консультация</span><span class="b dist">Дистант</span>
     </div>
@@ -418,5 +435,6 @@ footer a { color: var(--accent); }
 })();
 </script>
 
+<script src="practice.js"></script>
 </body>
 </html>
