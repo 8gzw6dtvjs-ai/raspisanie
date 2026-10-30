@@ -194,15 +194,15 @@ footer a { color: var(--accent); }
     <div class="day"><div class="empty">Загружаю расписание…</div></div>
   </main>
   <section id="practicePanel" role="tabpanel" aria-labelledby="practiceTab" hidden>
-    <h1>Учебная практика</h1>
-    <div class="practice-controls">
-      <label>Группа<select id="practiceGroup" disabled><option>Загрузка…</option></select></label>
-      <label>Дата<input type="date" id="practiceDate"></label>
-      <button class="chip" id="practiceAll" type="button">Все даты</button>
-      <button class="chip" id="practiceRefresh" type="button">Обновить</button>
-    </div>
-    <div id="practiceStatus" role="status"></div>
+    <header class="top" id="practiceHeader">
+      <div class="kicker"><span>Колледж телекоммуникаций МТУСИ · Учебная практика</span><span id="practiceStatus" role="status"></span></div>
+      <div class="grp"><h1 id="practiceGroupName">Учебная практика</h1></div>
+      <label class="schedule-group">Группа<select id="practiceGroup" disabled aria-label="Группа учебной практики"><option>Загрузка…</option></select></label>
+      <div class="row" id="practiceWeeks" role="group" aria-label="Неделя практики"></div>
+      <div class="row" id="practiceDays" role="group" aria-label="День практики"></div>
+    </header>
     <div id="practiceContent" class="wrap" aria-live="polite"></div>
+    <div class="row"><button class="chip" id="practiceRefresh" type="button">Обновить практику</button></div>
     <p class="note">Изменения проверяются при открытии вкладки и каждые 5 минут, пока она открыта. <a id="practiceSource" target="_blank" rel="noopener">Открыть таблицу практики</a>.</p>
   </section>
   <footer id="scheduleFooter">
