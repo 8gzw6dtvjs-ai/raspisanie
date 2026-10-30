@@ -12,3 +12,5 @@
 .practice-entry { padding: 14px; display: grid; gap: 6px; overflow-wrap: anywhere; }
 #practicePanel a { color: var(--accent); }
 button:disabled { opacity: .6; }
+.schedule-group { display: grid; gap: 4px; color: var(--muted); font-size: 13px; }
+.schedule-group select { width: 100%; min-height: 44px; min-width: 0; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; }

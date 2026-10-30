@@ -174,9 +174,8 @@ function build(sheets) {
       if (m && WD.indexOf(m[1]) >= 0) dated[WD.indexOf(m[1])] = m[2].padStart(5, '0');
     }));
     const groups = {};
-    const ds = w.groups[GROUP];
-    if (ds) {
-      groups[GROUP] = ds.map((d) => {
+    for (const [name, ds] of Object.entries(w.groups)) {
+      groups[name] = ds.map((d) => {
         const wi = WD.indexOf(d.label.toLowerCase().split(/\s/)[0]);
         const ps = d.pairs.filter((p) => p.cell).map((p) => {
           let c = p.cell;
@@ -228,7 +227,7 @@ async function main() {
   let prev = null;
   if (existsSync(OUT)) { try { prev = JSON.parse(readFileSync(OUT, 'utf8')); } catch (e) {} }
   const same = prev && JSON.stringify({ S: prev.S, weeks: prev.weeks }) === JSON.stringify(body);
-  const data = { v: 2, group: GROUP, updated: now, changed: same ? (prev.changed || prev.updated) : now, src: BASE, ...body };
+  const data = { v: 3, group: GROUP, updated: now, changed: same ? (prev.changed || prev.updated) : now, src: BASE, ...body };
   writeFileSync(OUT, JSON.stringify(data));
   console.log(same ? 'Изменений в расписании нет' : 'Расписание изменилось');
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `changed=${same ? 'false' : 'true'}\n`);

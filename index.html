@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e9edf0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1419" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Расписание пар группы ОИБ11-24П, КТ МТУСИ: замены, отмены, зачёты.">
+<meta name="description" content="Расписание групп КТ МТУСИ: пары, замены, отмены, зачёты и учебная практика.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -182,8 +182,11 @@ footer a { color: var(--accent); }
   <header class="top" id="scheduleHeader">
     <div class="kicker"><span>Колледж телекоммуникаций МТУСИ</span><span id="upd"></span></div>
     <div class="grp">
-      <h1 id="grpName">ОИБ11-24П</h1><span class="chev">3 курс · инф. безопасность</span>
+      <h1 id="grpName">ОИБ11-24П</h1>
     </div>
+    <label class="schedule-group">Группа
+      <select id="scheduleGroup" disabled aria-label="Группа основного расписания"><option>Загрузка…</option></select>
+    </label>
     <div class="row" id="weeks" role="group" aria-label="Неделя"></div>
     <div class="row" id="days" role="group" aria-label="День"></div>
   </header>
@@ -225,7 +228,15 @@ footer a { color: var(--accent); }
   };
 
   let D = null, S = [];
-  const st = { group: GROUP, week: 0, day: 0 };
+  const st = { group: store.get('schedule-group') || GROUP, week: 0, day: 0 };
+
+  function fillGroups() {
+    const groups = [...new Set(D.weeks.flatMap(w => Object.keys(w.groups)))].sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
+    if (!groups.includes(st.group)) st.group = groups.includes(GROUP) ? GROUP : groups[0] || GROUP;
+    $('scheduleGroup').innerHTML = groups.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+    $('scheduleGroup').value = st.group;
+    $('scheduleGroup').disabled = !groups.length;
+  }
 
   // ---- время по Москве ----
   function msk() {
@@ -423,7 +434,9 @@ footer a { color: var(--accent); }
   $('weeks').addEventListener('click', (e) => { const b = e.target.closest('[data-w]'); if (!b) return; st.week = +b.dataset.w; const di = D.weeks[st.week].dates.indexOf(NOW.ddmm); if (st.day !== 'all') st.day = di >= 0 ? di : 0; render(); });
   $('days').addEventListener('click', (e) => { const b = e.target.closest('[data-d]'); if (!b) return; st.day = b.dataset.d === 'all' ? 'all' : +b.dataset.d; render(); });
 
-  function show(d) { D = d; S = d.S; fill(); if (!shown) { pickDefault(); shown = true; } render(); }
+  $('scheduleGroup').addEventListener('change', (e) => { st.group = e.target.value; store.set('schedule-group', st.group); render(); });
+
+  function show(d) { D = d; S = d.S; fillGroups(); fill(); if (!shown) { pickDefault(); shown = true; } render(); }
   let shown = false;
   fetch('data.json?t=' + Date.now(), { cache: 'no-store' })
     .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
