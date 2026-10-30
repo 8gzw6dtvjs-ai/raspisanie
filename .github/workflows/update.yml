@@ -48,7 +48,7 @@ jobs:
       - name: Подготовить сайт
         run: |
           mkdir -p _site
-          cp index.html data.json manifest.webmanifest sw.js icon-192.png icon-512.png apple-touch-icon.png _site/
+          cp index.html practice.js practice.css data.json manifest.webmanifest sw.js icon-192.png icon-512.png apple-touch-icon.png _site/
 
       - uses: actions/configure-pages@v5
 
