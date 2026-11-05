@@ -1,5 +1,5 @@
 // Офлайн-режим: страница и последнее скачанное расписание открываются без интернета.
-const CACHE = 'pary-v4-practice-distance';
+const CACHE = 'pary-v5-practice-weeks-distance';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

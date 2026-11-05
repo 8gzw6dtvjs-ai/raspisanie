@@ -143,6 +143,7 @@ ol.pairs { list-style: none; margin: 0; padding: 0; }
 .b.next { background: var(--accent-soft); color: var(--accent); }
 
 .pair.chg { background: linear-gradient(90deg, var(--chg-soft), transparent 70%); }
+.pair.distance { background: var(--dist-soft); border-left: 4px solid var(--dist); }
 .pair.now { box-shadow: inset 0 0 0 2px var(--accent); }
 .cancelled { font-size: 13.5px; color: var(--muted); }
 .cancelled s { text-decoration-color: var(--chg); text-decoration-thickness: 2px; }
@@ -215,7 +216,7 @@ footer a { color: var(--accent); }
   };
 
   let D = null, S = [];
-  const st = { mode: store.get('schedule-mode') || 'lessons', group: store.get('schedule-group') || GROUP, week: 0, day: 0 };
+  const st = { mode: store.get('schedule-mode') || 'lessons', group: store.get('schedule-group') || GROUP, week: 0, day: 0, practiceWeek: null, practiceDay: 'all' };
 
   // ---- время по Москве ----
   function msk() {
@@ -383,8 +384,8 @@ footer a { color: var(--accent); }
 
   function render() {
     const practiceMode = st.mode === 'practice';
-    $('weeks').hidden = practiceMode;
-    $('days').hidden = practiceMode;
+    $('weeks').hidden = false;
+    $('days').hidden = false;
     document.querySelector('footer').hidden = practiceMode;
     document.querySelectorAll('[data-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === st.mode)));
     $('grpName').value = st.group;
@@ -417,22 +418,40 @@ footer a { color: var(--accent); }
     $('src').innerHTML = `Данные из <a href="${SRC}" target="_blank" rel="noopener">таблицы расписания колледжа</a>. Если что-то не сходится, верь таблице.`;
   }
 
-  $('weeks').addEventListener('click', (e) => { const b = e.target.closest('[data-w]'); if (!b) return; st.week = +b.dataset.w; const di = D.weeks[st.week].dates.indexOf(NOW.ddmm); if (st.day !== 'all') st.day = di >= 0 ? di : 0; render(); });
-  $('days').addEventListener('click', (e) => { const b = e.target.closest('[data-d]'); if (!b) return; st.day = b.dataset.d === 'all' ? 'all' : +b.dataset.d; render(); });
+  $('weeks').addEventListener('click', (e) => { const b = e.target.closest('[data-w]'); if (!b) return; if (st.mode === 'practice') { st.practiceWeek = b.dataset.w; render(); return; } st.week = +b.dataset.w; const di = D.weeks[st.week].dates.indexOf(NOW.ddmm); if (st.day !== 'all') st.day = di >= 0 ? di : 0; render(); });
+  $('days').addEventListener('click', (e) => { const b = e.target.closest('[data-d]'); if (!b) return; if (st.mode === 'practice') st.practiceDay = b.dataset.d === 'all' ? 'all' : +b.dataset.d; else st.day = b.dataset.d === 'all' ? 'all' : +b.dataset.d; render(); });
 
   function renderPractice() {
     const practice = D.practice;
     const src = practice?.src || 'https://docs.google.com/spreadsheets/d/1EobL1gXGQIg8ZKDorjweeWAKNwYYtac16jUbMAJY_O4/htmlview#gid=692423880';
     const entries = practice?.groups?.[st.group] || [];
+    const iso = ts => new Date(ts).toISOString().slice(0, 10);
+    const monday = date => { const d = new Date(date + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return iso(d); };
+    const starts = [...new Set(entries.map(e => monday(e.date)))].sort();
+    const current = monday(`${NOW.y}-${String(NOW.m).padStart(2,'0')}-${String(NOW.d).padStart(2,'0')}`);
+    if (!starts.includes(st.practiceWeek)) st.practiceWeek = starts.includes(current) ? current : starts.find(d => d > current) || starts[starts.length - 1];
+    const dateAt = i => iso(new Date(st.practiceWeek + 'T12:00:00Z').getTime() + i * 86400000);
+    const short = date => date.slice(8,10) + '.' + date.slice(5,7);
+    $('weeks').innerHTML = starts.map(start => `<button class="chip" aria-pressed="${start === st.practiceWeek}" data-w="${start}">${short(start)}–${short(iso(new Date(start + 'T12:00:00Z').getTime() + 5 * 86400000))}</button>`).join('');
+    $('days').innerHTML = starts.length ? WDS.map((label, i) => `<button class="chip day${short(dateAt(i)) === NOW.ddmm ? ' today' : ''}" aria-pressed="${st.practiceDay === i}" data-d="${i}"><b>${label}</b><span>${dateAt(i).slice(8,10)}</span></button>`).join('') + `<button class="chip day" aria-pressed="${st.practiceDay === 'all'}" data-d="all"><b>Вся</b><span>неделя</span></button>` : '';
     const stamp = practice?.updated ? new Intl.DateTimeFormat('ru-RU', {timeZone:'Europe/Moscow',dateStyle:'short',timeStyle:'short'}).format(new Date(practice.updated)) : '';
-    $('main').innerHTML = `<div class="notice">Учебная практика · ${esc(st.group)}${stamp ? ' · обновлено ' + esc(stamp) : ''}<br><a href="${esc(src)}" target="_blank" rel="noopener">Таблица практики колледжа</a></div>` +
-      (entries.length ? entries.map(entry => {
-        const date = new Date(entry.date + 'T12:00:00+03:00');
-        const label = new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);
+    let html = `<div class="notice">Учебная практика · ${esc(st.group)}${stamp ? ' · обновлено ' + esc(stamp) : ''}<br><a href="${esc(src)}" target="_blank" rel="noopener">Таблица практики колледжа</a></div>`;
+    if (!starts.length) {
+      $('main').innerHTML = html + '<div class="empty">' + (practice ? 'В таблице нет занятий практики для выбранной группы.' : 'Данные практики пока не загружены.') + '</div>';
+      return;
+    }
+    const days = st.practiceDay === 'all' ? [0,1,2,3,4,5] : [st.practiceDay];
+    html += days.map(i => {
+      const date = dateAt(i), isToday = short(date) === NOW.ddmm;
+      const rows = entries.filter(entry => entry.date === date);
+      const head = `<h2><span>${WD[i]}</span><span class="d">${short(date)}${isToday ? ' · сегодня' : ''}</span></h2>`;
+      const items = rows.map(entry => {
         const distant = /дист|онлайн/i.test([entry.room, entry.module, entry.time, entry.teacher].join(' '));
-        const room = /^(?:дист(?:\.|ант(?:но|ный)?)?|дистанционно|онлайн)$/i.test((entry.room || '').trim()) ? '' : entry.room;
-        return `<section class="day"><h2>${esc(label)}${distant ? ' <span class="b dist">Дистант</span>' : ''}</h2><ol class="pairs"><li class="pair"><div class="pn">УП</div><div class="body"><strong>${esc(entry.module || 'Учебная практика')}</strong><p>${esc(entry.time || 'Время не указано')}</p><p>${esc(entry.teacher)}${room ? ' · каб. ' + esc(room) : ''}</p></div></li></ol></section>`;
-      }).join('') : '<div class="empty">' + (practice ? 'В таблице нет занятий практики для выбранной группы.' : 'Данные практики пока не загружены. Открой таблицу колледжа по ссылке выше.') + '</div>');
+        return `<li class="pair${distant ? ' distance' : ''}"><div class="pn">УП</div><div class="body">${distant ? '<div class="badges"><span class="b dist">Дистант</span></div>' : ''}<strong>${esc(entry.module || 'Учебная практика')}</strong><p>${esc(entry.time || 'Время не указано')}</p><p>${esc(entry.teacher)}</p></div><span class="room">${distant ? 'Дистанционно' : entry.room ? 'каб. ' + esc(entry.room) : ''}</span></li>`;
+      }).join('');
+      return `<section class="day${isToday ? ' is-today' : ''}">${head}${items ? '<ol class="pairs">' + items + '</ol>' : '<div class="empty">Практики нет.</div>'}</section>`;
+    }).join('');
+    $('main').innerHTML = html;
   }
   $('mode').addEventListener('click', event => {
     const button = event.target.closest('[data-mode]');
