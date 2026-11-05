@@ -162,6 +162,57 @@ function extractWeek(doc) {
   return { groups };
 }
 
+// Практика: разворачиваем объединённые ячейки, затем читаем секции групп.
+function extractPractice(doc) {
+  const table = doc.querySelector('table.waffle') || doc.querySelector('table');
+  const grid = [];
+  if (!table) throw new Error('Нет таблицы практики');
+  [...table.rows].forEach((row, ri) => {
+    grid[ri] ||= [];
+    let ci = 0;
+    [...row.cells].forEach((cell) => {
+      while (grid[ri][ci] !== undefined) ci++;
+      const value = cellText(cell);
+      for (let r = 0; r < (cell.rowSpan || 1); r++)
+        for (let c = 0; c < (cell.colSpan || 1); c++) (grid[ri+r] ||= [])[ci+c] = value;
+      ci += cell.colSpan || 1;
+    });
+  });
+  const groups = {};
+  const active = new Map();
+  for (const row of grid) {
+    if (!row) continue;
+    row.forEach((text, ci) => {
+      if (/^[А-ЯЁ]{2,5}\d{1,2}-\d{2,3}[А-ЯЁа-яё]*$/.test(text || '')) {
+        active.set(ci, text); groups[text] ||= [];
+      }
+    });
+    for (const [ci, group] of active) {
+      const date = (row[ci] || '').match(/^(\d{1,2})\.(\d{2})\.(\d{2}|\d{4})$/);
+      if (!date) continue;
+      const year = date[3].length === 2 ? '20' + date[3] : date[3];
+      groups[group].push({date: `${year}-${date[2]}-${date[1].padStart(2,'0')}`,
+        time: row[ci+1] || '', module: row[ci+2] || '', teacher: row[ci+3] || '', room: row[ci+4] || ''});
+    }
+  }
+  return groups;
+}
+async function loadPractice() {
+  const src = 'https://docs.google.com/spreadsheets/d/1EobL1gXGQIg8ZKDorjweeWAKNwYYtac16jUbMAJY_O4/htmlview';
+  const top = await get(src);
+  const sheets = [...top.matchAll(/gid: "(\d+)"/g)].map(m => m[1]);
+  const groups = {};
+  for (const gid of [...new Set(sheets)]) {
+    const dom = new JSDOM(await get(`${src}/sheet?headers=true&gid=${gid}`));
+    const parsed = extractPractice(dom.window.document);
+    dom.window.close();
+    for (const [group, entries] of Object.entries(parsed)) (groups[group] ||= []).push(...entries);
+  }
+  if (!Object.values(groups).some(rows => rows.length)) throw new Error('Не разобраны занятия практики');
+  for (const group of Object.keys(groups)) groups[group] = [...new Map(groups[group].map(row => [JSON.stringify(row),row])).values()].sort((a,b) => a.date.localeCompare(b.date));
+  return {src, updated: new Date().toISOString(), groups};
+}
+
 // ---------- сборка data.json ----------
 function build(sheets) {
   const S = [''], SI = new Map([['', 0]]);
@@ -174,8 +225,8 @@ function build(sheets) {
       if (m && WD.indexOf(m[1]) >= 0) dated[WD.indexOf(m[1])] = m[2].padStart(5, '0');
     }));
     const groups = {};
-    for (const [name, ds] of Object.entries(w.groups)) {
-      groups[name] = ds.map((d) => {
+    for (const [groupName, ds] of Object.entries(w.groups)) {
+      groups[groupName] = ds.map((d) => {
         const wi = WD.indexOf(d.label.toLowerCase().split(/\s/)[0]);
         const ps = d.pairs.filter((p) => p.cell).map((p) => {
           let c = p.cell;
@@ -223,11 +274,16 @@ async function main() {
   if (!parsed.some((p) => Object.keys(p.groups).length)) throw new Error('Ни одной группы не разобрано — data.json не трогаю');
 
   const body = build(parsed);
+  try { body.practice = await loadPractice(); }
+  catch (error) {
+    console.warn('Практика не обновлена:', error.message);
+    try { body.practice = JSON.parse(readFileSync(OUT, 'utf8')).practice; } catch {}
+  }
   const now = new Date().toISOString();
   let prev = null;
   if (existsSync(OUT)) { try { prev = JSON.parse(readFileSync(OUT, 'utf8')); } catch (e) {} }
-  const same = prev && JSON.stringify({ S: prev.S, weeks: prev.weeks }) === JSON.stringify(body);
-  const data = { v: 3, group: GROUP, updated: now, changed: same ? (prev.changed || prev.updated) : now, src: BASE, ...body };
+  const same = prev && JSON.stringify({S: prev.S, weeks: prev.weeks, practice: prev.practice?.groups}) === JSON.stringify({S: body.S, weeks: body.weeks, practice: body.practice?.groups});
+  const data = { v: 2, group: GROUP, updated: now, changed: same ? (prev.changed || prev.updated) : now, src: BASE, ...body };
   writeFileSync(OUT, JSON.stringify(data));
   console.log(same ? 'Изменений в расписании нет' : 'Расписание изменилось');
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `changed=${same ? 'false' : 'true'}\n`);
