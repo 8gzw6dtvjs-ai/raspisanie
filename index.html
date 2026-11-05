@@ -429,7 +429,9 @@ footer a { color: var(--accent); }
       (entries.length ? entries.map(entry => {
         const date = new Date(entry.date + 'T12:00:00+03:00');
         const label = new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);
-        return `<section class="day"><h2>${esc(label)}</h2><ol class="pairs"><li class="pair"><div class="pn">УП</div><div class="body"><strong>${esc(entry.module || 'Учебная практика')}</strong><p>${esc(entry.time || 'Время не указано')}</p><p>${esc(entry.teacher)}${entry.room ? ' · каб. ' + esc(entry.room) : ''}</p></div></li></ol></section>`;
+        const distant = /дист|онлайн/i.test([entry.room, entry.module, entry.time, entry.teacher].join(' '));
+        const room = /^(?:дист(?:\.|ант(?:но|ный)?)?|дистанционно|онлайн)$/i.test((entry.room || '').trim()) ? '' : entry.room;
+        return `<section class="day"><h2>${esc(label)}${distant ? ' <span class="b dist">Дистант</span>' : ''}</h2><ol class="pairs"><li class="pair"><div class="pn">УП</div><div class="body"><strong>${esc(entry.module || 'Учебная практика')}</strong><p>${esc(entry.time || 'Время не указано')}</p><p>${esc(entry.teacher)}${room ? ' · каб. ' + esc(room) : ''}</p></div></li></ol></section>`;
       }).join('') : '<div class="empty">' + (practice ? 'В таблице нет занятий практики для выбранной группы.' : 'Данные практики пока не загружены. Открой таблицу колледжа по ссылке выше.') + '</div>');
   }
   $('mode').addEventListener('click', event => {
